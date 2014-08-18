@@ -1,6 +1,3 @@
-# TODO: Fix `not completed` display (sum up the number course.fulfilled and add)
-# TODO: add unused section
-
 from auth import authenticate
 from BeautifulSoup import BeautifulSoup
 from itertools import groupby, chain
@@ -100,12 +97,11 @@ class UnfilledCourse(Course):
     
 def academicaudit(user, pw):
     # Authenticate and grab home page
-    _audit_base = "https://enr-apps.as.cmu.edu/audit/audit"
-    session = authenticate('https://enr-apps.as.cmu.edu/audit/audit', user, pw)
+    _audit_base = ",://enr-apps.as.cmu.edu/audit/audit"
+    session = authenticate(',://enr-apps.as.cmu.edu/audit/audit', user, pw)
     homepage = BeautifulSoup(session.get('{}?call=2'.format(_audit_base)).content)
     
     # Figure out the correct attributes for the URL
-    #auditcontacts = [el.get('href').replace('mailto:','') for el in homepage.findAll('a') if "mailto" in el['href']]
     major = homepage.find('input', attrs={'name':'MajorFile'}).get('value')
     
     # Build URL
@@ -126,7 +122,8 @@ class Audit(object):
     
 def parse_raw_audit(audit, kind="html"):
     def parse_unused(data):
-        re_unused =  re.compile(r"([0-9]{2}\-[0-9]{3}) (\w+) * \'([0-9]{2})\s+([a-z]+|\*)\s+(.+)$", re.IGNORECASE) # (number, semester, year, grade, units)
+        # (number, semester, year, grade, units)
+        re_unused = re.compile(r"([0-9]{2}\-[0-9]{3}) (\w+) * \'([0-9]{2})\s+([a-z]+|\*)\s+(.+)$", re.IGNORECASE) 
         
         r = RequirementList("Unused")
         for line in data.splitlines():
@@ -139,27 +136,36 @@ def parse_raw_audit(audit, kind="html"):
         return r    
     
     def parse_units_qpa(data):
-        items = [ map(unicode.strip, line.split(":")) for line in data.split("\n")]
+        data = data.strip()
+        items = [ map(lambda s: s.strip(), line.split(":")) for line in data.split("\n")]
         return dict(items)
         
     def parse_courses(data):         
         # Regular expressions for matching audit line parts
-        re_coursename = re.compile(r"([0-9]?[0-9])\. (.+)$", re.IGNORECASE) # (i, name)
-        re_courseinfo = re.compile(r"([0-9]{2}\-[0-9]{3}) (\w+) * \'([0-9]{2})\s+([a-z]+|\*)\s+(.+)$", re.IGNORECASE) # (number, semester, year, grade, units)
-        re_unfilled = re.compile(r"(.+)\s+unfilled\s+(\w+)", re.IGNORECASE) # (n, course|units)
+        # (i, name)
+        re_coursename = re.compile(r"([0-9]?[0-9])\. (.+)$", re.IGNORECASE) 
+        # (number, semester, year, grade, units)
+        re_courseinfo = re.compile(r"([0-9]{2}\-[0-9]{3}) (\w+) * \'([0-9]{2})\s+([a-z]+|\*)\s+(.+)$", re.IGNORECASE) 
+        # (n, course|units)
+        re_unfilled = re.compile(r"(.+)\s+unfilled\s+(\w+)", re.IGNORECASE)
+        # no groups, just a match
         re_isname = re.compile(r"\d+\.\s+")
                     
         def parse_seg(seg):
+            """Parse one audit segment (basically a line)."""
             courses = []
 
             for part in seg:
                 if re_isname.match(part):
+                    # If this contains a requirement name
                     i, name = re_coursename.match(part).groups()
                     name = name.replace("_", " ")
                 elif re_unfilled.match(part):
+                    # If this talks about an unfilled requirement
                     missing = re_unfilled.match(part).groups()
                     courses.append(UnfilledCourse(name, missing))
                 else:
+                    # Otherwise, it's course info
                     number, semester, year, grade, units = re_courseinfo.match(part).groups()
                     fulfilled = "*" not in grade
                     course = Course(i, name, number, semester, year, grade, units, fulfilled)
@@ -186,7 +192,13 @@ def parse_raw_audit(audit, kind="html"):
             # Headings
             c = list(flatten(list(c_iter)))
             if not is_course: 
-                sections.append(RequirementList(c[0]))
+                # Notes will show up as subsequent elements in the list of line segs
+                # past the initial portion
+                has_note = len(c) > 1 and bool(" ".join(c).strip())                    
+                reqlist = RequirementList(c[0])
+                if has_note:
+                    reqlist.notes = " ".join(n.strip() for n in c[1:])
+                sections.append(reqlist)    
             else:
                 sections[-1].courses = parse_seg(c)
                         

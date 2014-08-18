@@ -1,9 +1,9 @@
 from flask import *
 from audit import academicaudit, auditfromstring
-from flask_sslify import SSLify
+#from flask_sslify import SSLify
 app = Flask(__name__)
-sslify = SSLify(app, permanent=True)
-app.debug = False
+#sslify = SSLify(app, permanent=True)
+app.debug = True
 
 @app.route('/audit', methods=['GET', 'POST'])
 def displayaudit():
