@@ -1,0 +1,48 @@
+body {
+	 font: 1.2em "Ubuntu", Arial, Helvetica, sans-serif;
+	 color: #464646;
+	 padding: 3% 10%;
+}
+h1,h2 {
+	color: #990000;
+	font-weight: 400;
+}
+a { color: #990000; }
+header { margin-bottom: 1em; border-bottom: 1px solid #990000; }
+header h1 {
+	font-weight: bold;
+}
+header h2 {
+	font-weight: 200;
+	color: #656565;
+	font-size: 1em;
+	
+}
+table {
+	width: 100%;
+}
+
+p.warnings { border: 1px solid red; background: #FFD3D2; padding: 0.5em; color: #000;}
+td.fulfilled.yes { background: #DFFFDB;}
+td.fulfilled.no { background: #FFD3D2; }
+td.name { font-weight: 500; }
+tr.course.unfulfilled { border-left: 3px solid #990000; }
+tr.course.in-progress { border-left: 3px solid orange;}
+tr.course.in-progress > td.fulfilled.no { background: lightyellow;}
+
+@media all {
+	section#disclaimer {
+		border: 2px solid #000;
+		margin-top: 0.5em;
+		padding: 1em;
+		font-size: 0.75em;
+	}
+	blockquote {
+		font-style: italic;
+	}
+}
+
+#login textarea {
+	font-family: monospace;
+	width: 100%;
+}

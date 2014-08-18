@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block body %}
+		<header id="title">
+			<h1>Academic Audit for {{audit.name}}</h1>
+			<h2>Currently a {{audit.unit_qpa['CLASSLEVEL']}}</h2>
+		</header>
+		<section id="overview">
+			<p>Your <strong>cumulative QPA</strong> is <strong>{{audit.unit_qpa['CUM_QPA']}}</strong>.</p>
+			<p>You have <strong>passed {{audit.unit_qpa['UNITPASSED']}} units</strong>, are <strong>currently taking {{audit.unit_qpa['UNIT_INPRG']}} units</strong>, and <strong>will be taking {{audit.unit_qpa['UPCOMING']}} units</strong> next semester.</p>
+		</section>	
+		<section id="audit">
+			{% for section in audit.courses %}
+			<h2>{{section.name}}</h2>
+
+			{% if section.warning_summary %}
+			<p class="warnings">Not completed: {{section.warning_summary}}</p>
+			{% endif %}
+			
+			<table class='pure-table'>
+				<thead>
+					<tr><th>Requirement</th><th>Course Number</th><th>Grade</th><th>Semester</th><th>Completed?</th></tr>
+				</thead>
+				{% for c in section.courses %}
+				{% if c.fulfilled %}
+				<tr class="course fulfilled">
+				{% elif c.in_progress %}	
+				<tr class="course unfulfilled in-progress">
+				{% else %}	
+				<tr class="course unfulfilled">
+				{% endif %}	
+					<td class="name">{{c.name}}</td>
+					{% if c.number %}
+					<td class="number"><a href="http://coursecatalog.web.cmu.edu/search/?P={{c.number}}">{{c.number}}</a></td>
+					{% else %}
+					<td class="number">-</td>
+					{% endif %}
+					<td class="grade">{{c.grade if c.grade else "-"}}</td>
+					<td class="semester">{{c.semester if c.semester else "-"}}</td>
+					{% if c.fulfilled %}
+					<td class="fulfilled yes">Y</td>
+					{% else %}	
+					<td class="fulfilled no">N</td>
+					{% endif %}	
+				</tr>
+				{% endfor %}
+			</table>			
+			{% endfor %}
+		</section>	
+		<section id="disclaimer">
+			<p>Disclaimer: This is a totally unofficial interface and is also an unofficial document. As noted by the official audit page:</p>
+			<blockquote>
+				This report is a tool for advising and cannot be used as a University Transcript. Graduation requirements are the responsibility of the student. 
+				Questions? Contact your faculty advisor.
+			</blockquote>	
+			
+{% endblock %}			

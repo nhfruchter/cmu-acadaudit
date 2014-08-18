@@ -1,0 +1,3 @@
+requests>=2.0.0
+Flask
+BeautifulSoup==3.2.1
