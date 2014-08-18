@@ -98,7 +98,11 @@ class UnfilledCourse(Course):
 def academicaudit(user, pw):
     # Authenticate and grab home page
     _audit_base = ",://enr-apps.as.cmu.edu/audit/audit"
-    session = authenticate(',://enr-apps.as.cmu.edu/audit/audit', user, pw)
+    try:
+        session = authenticate('https://enr-apps.as.cmu.edu/audit/audit', user, pw)
+    except:
+        raise Exception("Failed to log in.")
+    
     homepage = BeautifulSoup(session.get('{}?call=2'.format(_audit_base)).content)
     
     # Figure out the correct attributes for the URL
@@ -205,6 +209,7 @@ def parse_raw_audit(audit, kind="html"):
         return sections
 
     if kind == "html":
+        # Find relevant text blocks
         parser = BeautifulSoup(audit)
         rawdata = parser.findAll('pre')
     
@@ -212,7 +217,9 @@ def parse_raw_audit(audit, kind="html"):
         unit_qpa = parse_units_qpa(tag_contains(rawdata, "UNIT_INPRG"))
         courses = parse_courses(tag_contains(rawdata, "1."))
         unused = parse_unused(tag_contains(rawdata, "(Unused)"))
+        
     elif kind == "text":
+        # Split the input at these locations
         tokens = dict(
             header=audit.index("Course-Requirement Matchings"),
             unused=audit.index("Not Matched:"),
@@ -223,6 +230,7 @@ def parse_raw_audit(audit, kind="html"):
 
         name = [line for line in header if line == line.upper() and line][0]
         
+        # Turn into the plaintext blocks that the parser expects
         unit_qpa = '\n'.join(audit[tokens['info']:tokens['end']].splitlines()[1:])
         courses = '\n'.join(audit[tokens['header']:tokens['unused']].splitlines()[1:])
         unused = '\n'.join(audit[tokens['unused']:tokens['info']].splitlines()[1:])

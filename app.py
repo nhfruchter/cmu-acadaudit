@@ -1,9 +1,9 @@
 from flask import *
 from audit import academicaudit, auditfromstring
-#from flask_sslify import SSLify
+from flask_sslify import SSLify
 app = Flask(__name__)
-#sslify = SSLify(app, permanent=True)
-app.debug = True
+sslify = SSLify(app, permanent=True)
+app.debug = False
 
 @app.route('/audit', methods=['GET', 'POST'])
 def displayaudit():
@@ -12,11 +12,14 @@ def displayaudit():
             try:
                 auditobj = academicaudit(request.form['user'], request.form['passwd'])
             except:
-                raise Exception("There was a problem logging in. Please try again.")
+                return render_template('error.html', e="There was a problem logging in. Please try again.")
         elif request.form.get('rawaudit'):
-            auditobj = auditfromstring(request.form['rawaudit'])
+            try:
+                auditobj = auditfromstring(request.form['rawaudit'])
+            except:
+                return render_template('error.html', e="This audit doesn't seem to be formatted normally.")
         else:    
-            raise ValueError("Please fill in all fields.")    
+            return render_template('error.html', e="Please fill in all fields.")    
         return render_template('audit.html', audit=auditobj)
     else:
         return redirect( url_for('home') )    
